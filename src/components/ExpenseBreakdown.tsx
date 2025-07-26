@@ -1,20 +1,34 @@
 import React, { useMemo } from 'react';
-import { Calendar, TrendingUp, BarChart3 } from 'lucide-react';
+import { Calendar, TrendingUp, BarChart3, Download } from 'lucide-react';
 import { Expense } from '../types';
 import { getWeekStart, getMonthStart, formatCurrency } from '../utils/dateUtils';
+import { generateExpenseReport } from '../utils/pdfGenerator';
 
 interface ExpenseBreakdownProps {
   expenses: Expense[];
+  initialBalance: number;
+  currentBalance: number;
 }
 
-export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({ expenses }) => {
+export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({ 
+  expenses, 
+  initialBalance, 
+  currentBalance 
+}) => {
   const breakdown = useMemo(() => {
     const now = new Date();
     const weekStart = getWeekStart(now);
     const monthStart = getMonthStart(now);
 
-    const weeklyExpenses = expenses.filter(expense => expense.date >= weekStart);
-    const monthlyExpenses = expenses.filter(expense => expense.date >= monthStart);
+    const weeklyExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= weekStart;
+    });
+    
+    const monthlyExpenses = expenses.filter(expense => {
+      const expenseDate = new Date(expense.date);
+      return expenseDate >= monthStart;
+    });
 
     const weeklyTotal = weeklyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
     const monthlyTotal = monthlyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -45,6 +59,10 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({ expenses }) 
       }
     };
   }, [expenses]);
+
+  const handleDownloadPDF = () => {
+    generateExpenseReport(expenses, initialBalance, currentBalance);
+  };
 
   const CategoryBreakdown: React.FC<{ categories: Record<string, number>; total: number }> = ({ categories, total }) => {
     const sortedCategories = Object.entries(categories)
@@ -85,7 +103,19 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({ expenses }) 
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      {/* Download Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleDownloadPDF}
+          className="flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download PDF Report
+        </button>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Weekly Breakdown */}
       <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -136,6 +166,7 @@ export const ExpenseBreakdown: React.FC<ExpenseBreakdownProps> = ({ expenses }) 
           categories={breakdown.monthly.categories} 
           total={breakdown.monthly.total} 
         />
+      </div>
       </div>
     </div>
   );

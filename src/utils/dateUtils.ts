@@ -1,12 +1,16 @@
 export const getWeekStart = (date: Date): Date => {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day;
-  return new Date(d.setDate(diff));
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday as start of week
+  const weekStart = new Date(d.setDate(diff));
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart;
 };
 
 export const getMonthStart = (date: Date): Date => {
-  return new Date(date.getFullYear(), date.getMonth(), 1);
+  const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+  monthStart.setHours(0, 0, 0, 0);
+  return monthStart;
 };
 
 export const formatDate = (date: Date): string => {

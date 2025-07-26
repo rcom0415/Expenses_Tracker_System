@@ -149,7 +149,11 @@ function App() {
             />
           </div>
         ) : (
-          <ExpenseBreakdown expenses={appState.expenses} />
+          <ExpenseBreakdown 
+            expenses={appState.expenses}
+            initialBalance={appState.initialBalance}
+            currentBalance={appState.currentBalance}
+          />
         )}
 
         {/* Reset Confirmation Modal */}
