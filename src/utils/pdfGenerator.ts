@@ -195,7 +195,7 @@ export const generateExpenseReport = (
     const netAmount = totalIncomeOnly - totalExpensesOnly;
 
     // Net amount box
-    doc.setFillColor(netAmount >= 0 ? ...successColor : ...accentColor);
+    doc.setFillColor(...(netAmount >= 0 ? successColor : accentColor));
     doc.rect(pageWidth - 90, finalY, 70, 15, 'F');
     
     doc.setTextColor(255, 255, 255);
