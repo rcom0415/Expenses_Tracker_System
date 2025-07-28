@@ -12,6 +12,12 @@ export const generateExpenseReport = (
   const pageWidth = doc.internal.pageSize.width;
   let yPosition = 20;
 
+  // Calculate totals at the top level for use in all functions
+  const expenseTransactions = expenses.filter(exp => exp.type === 'expense');
+  const incomeTransactions = expenses.filter(exp => exp.type === 'income');
+  const totalExpensesOnly = expenseTransactions.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncomeOnly = incomeTransactions.reduce((sum, expense) => sum + expense.amount, 0);
+
   // Colors
   const primaryColor = [41, 128, 185];
   const secondaryColor = [52, 73, 94];
@@ -54,11 +60,6 @@ export const generateExpenseReport = (
     doc.text('FINANCIAL SUMMARY', 20, yPosition);
     yPosition += 10;
 
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    const expenseTransactions = expenses.filter(exp => exp.type === 'expense');
-    const incomeTransactions = expenses.filter(exp => exp.type === 'income');
-    const totalExpensesOnly = expenseTransactions.reduce((sum, expense) => sum + expense.amount, 0);
-    const totalIncomeOnly = incomeTransactions.reduce((sum, expense) => sum + expense.amount, 0);
     const remainingBalance = currentBalance;
     const spentPercentage = initialBalance > 0 ? ((totalExpensesOnly / initialBalance) * 100).toFixed(1) : '0';
 
@@ -231,12 +232,6 @@ export const generateExpenseReport = (
   addFinancialSummary();
   addExpenseDetails();
   addFooter();
-
-  // Calculate totals for return object
-  const expenseTransactions = expenses.filter(exp => exp.type === 'expense');
-  const incomeTransactions = expenses.filter(exp => exp.type === 'income');
-  const totalExpensesOnly = expenseTransactions.reduce((sum, expense) => sum + expense.amount, 0);
-  const totalIncomeOnly = incomeTransactions.reduce((sum, expense) => sum + expense.amount, 0);
 
   // Generate filename
   const today = new Date();
