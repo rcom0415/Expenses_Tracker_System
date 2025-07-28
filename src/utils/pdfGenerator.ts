@@ -232,6 +232,12 @@ export const generateExpenseReport = (
   addExpenseDetails();
   addFooter();
 
+  // Calculate totals for return object
+  const expenseTransactions = expenses.filter(exp => exp.type === 'expense');
+  const incomeTransactions = expenses.filter(exp => exp.type === 'income');
+  const totalExpensesOnly = expenseTransactions.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalIncomeOnly = incomeTransactions.reduce((sum, expense) => sum + expense.amount, 0);
+
   // Generate filename
   const today = new Date();
   const dateStr = today.toISOString().split('T')[0];
