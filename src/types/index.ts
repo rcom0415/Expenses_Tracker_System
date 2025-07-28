@@ -4,6 +4,7 @@ export interface Expense {
   amount: number;
   date: Date;
   category?: string;
+  type: 'expense' | 'income';
 }
 
 export interface AppState {

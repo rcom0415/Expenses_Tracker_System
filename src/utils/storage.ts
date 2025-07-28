@@ -18,7 +18,8 @@ export const loadFromStorage = (): AppState | null => {
       // Convert date strings back to Date objects
       parsed.expenses = parsed.expenses.map((expense: any) => ({
         ...expense,
-        date: new Date(expense.date)
+        date: new Date(expense.date),
+        type: expense.type || 'expense' // Default to expense for backward compatibility
       }));
       return parsed;
     }

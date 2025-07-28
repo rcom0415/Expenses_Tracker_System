@@ -4,7 +4,8 @@ import { saveToStorage, loadFromStorage } from './utils/storage';
 import { InitialBalanceSetup } from './components/InitialBalanceSetup';
 import { BalanceCard } from './components/BalanceCard';
 import { AddExpenseForm } from './components/AddExpenseForm';
-import { ExpensesList } from './components/ExpensesList';
+import { AddIncomeForm } from './components/AddIncomeForm';
+import { TransactionsList } from './components/TransactionsList';
 import { ExpenseBreakdown } from './components/ExpenseBreakdown';
 import { Settings, RotateCcw } from 'lucide-react';
 
@@ -49,7 +50,8 @@ function App() {
       id: Date.now().toString(),
       label,
       amount,
-      date: new Date()
+      date: new Date(),
+      type: 'expense'
     };
 
     setAppState(prev => ({
@@ -59,12 +61,30 @@ function App() {
     }));
   };
 
+  const handleAddIncome = (label: string, amount: number) => {
+    const newIncome: Expense = {
+      id: Date.now().toString(),
+      label,
+      amount,
+      date: new Date(),
+      type: 'income'
+    };
+
+    setAppState(prev => ({
+      ...prev,
+      currentBalance: prev.currentBalance + amount,
+      expenses: [newIncome, ...prev.expenses]
+    }));
+  };
+
   const handleDeleteExpense = (id: string) => {
     const expense = appState.expenses.find(e => e.id === id);
     if (expense) {
       setAppState(prev => ({
         ...prev,
-        currentBalance: prev.currentBalance + expense.amount,
+        currentBalance: expense.type === 'expense' 
+          ? prev.currentBalance + expense.amount 
+          : prev.currentBalance - expense.amount,
         expenses: prev.expenses.filter(e => e.id !== id)
       }));
     }
@@ -80,7 +100,13 @@ function App() {
     setShowResetConfirm(false);
   };
 
-  const totalExpenses = appState.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = appState.expenses
+    .filter(expense => expense.type === 'expense')
+    .reduce((sum, expense) => sum + expense.amount, 0);
+  
+  const totalIncome = appState.expenses
+    .filter(expense => expense.type === 'income')
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
   if (!isInitialized) {
     return <InitialBalanceSetup onSetBalance={handleSetInitialBalance} />;
@@ -109,6 +135,7 @@ function App() {
             currentBalance={appState.currentBalance}
             initialBalance={appState.initialBalance}
             totalExpenses={totalExpenses}
+            totalIncome={totalIncome}
           />
         </div>
 
@@ -138,12 +165,15 @@ function App() {
 
         {/* Tab Content */}
         {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <AddExpenseForm
               onAddExpense={handleAddExpense}
               currentBalance={appState.currentBalance}
             />
-            <ExpensesList
+            <AddIncomeForm
+              onAddIncome={handleAddIncome}
+            />
+            <TransactionsList
               expenses={appState.expenses}
               onDeleteExpense={handleDeleteExpense}
             />

@@ -55,13 +55,18 @@ export const generateExpenseReport = (
     yPosition += 10;
 
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const expenseTransactions = expenses.filter(exp => exp.type === 'expense');
+    const incomeTransactions = expenses.filter(exp => exp.type === 'income');
+    const totalExpensesOnly = expenseTransactions.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalIncomeOnly = incomeTransactions.reduce((sum, expense) => sum + expense.amount, 0);
     const remainingBalance = currentBalance;
-    const spentPercentage = initialBalance > 0 ? ((totalExpenses / initialBalance) * 100).toFixed(1) : '0';
+    const spentPercentage = initialBalance > 0 ? ((totalExpensesOnly / initialBalance) * 100).toFixed(1) : '0';
 
     // Summary data for table
     const summaryData = [
       ['Initial Balance', formatCurrency(initialBalance), ''],
-      ['Total Expenses', formatCurrency(totalExpenses), `${spentPercentage}% of initial`],
+      ['Total Income', formatCurrency(totalIncomeOnly), `${incomeTransactions.length} transactions`],
+      ['Total Expenses', formatCurrency(totalExpensesOnly), `${spentPercentage}% of initial`],
       ['Current Balance', formatCurrency(remainingBalance), remainingBalance >= 0 ? 'Positive' : 'Negative'],
       ['Total Transactions', expenses.length.toString(), 'Count']
     ];
@@ -133,8 +138,8 @@ export const generateExpenseReport = (
     const tableData = sortedExpenses.map((expense, index) => [
       (index + 1).toString(),
       formatDate(expense.date),
-      expense.label,
-      formatCurrency(expense.amount)
+      `${expense.label} (${expense.type === 'income' ? 'Income' : 'Expense'})`,
+      `${expense.type === 'income' ? '+' : '-'}${formatCurrency(expense.amount)}`
     ]);
 
     // Expenses table
@@ -176,7 +181,6 @@ export const generateExpenseReport = (
           cellWidth: 35, 
           halign: 'right',
           fontStyle: 'bold',
-          textColor: accentColor
         }
       },
       margin: { left: 20, right: 20 },
@@ -188,17 +192,17 @@ export const generateExpenseReport = (
 
     // Total expenses summary
     const finalY = (doc as any).lastAutoTable.finalY + 10;
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const netAmount = totalIncomeOnly - totalExpensesOnly;
 
-    // Total box
-    doc.setFillColor(...accentColor);
+    // Net amount box
+    doc.setFillColor(netAmount >= 0 ? ...successColor : ...accentColor);
     doc.rect(pageWidth - 90, finalY, 70, 15, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL:', pageWidth - 85, finalY + 6);
-    doc.text(formatCurrency(totalExpenses), pageWidth - 25, finalY + 10, { align: 'right' });
+    doc.text('NET:', pageWidth - 85, finalY + 6);
+    doc.text(`${netAmount >= 0 ? '+' : ''}${formatCurrency(Math.abs(netAmount))}`, pageWidth - 25, finalY + 10, { align: 'right' });
 
     yPosition = finalY + 25;
   };
@@ -239,7 +243,8 @@ export const generateExpenseReport = (
   return {
     success: true,
     filename,
-    totalExpenses: expenses.reduce((sum, exp) => sum + exp.amount, 0),
+    totalExpenses: totalExpensesOnly,
+    totalIncome: totalIncomeOnly,
     transactionCount: expenses.length
   };
 };
